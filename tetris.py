@@ -159,24 +159,15 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
 def getHighScore():
     # Default high score
     highScore = 0
-    # Try to read the high score from a file
-    # try:
     highScoreFile = open("score.txt", "r")
     highScore = int(highScoreFile.read())
     highScoreFile.close()
-    # except IOError:
-
     return highScore
 
 def saveHighScore(newHighScore):
-    # try:
-        # Write the file to disk
     highScoreFile = open("score.txt", "w")
     highScoreFile.write(str(newHighScore))
     highScoreFile.close()
-    # except IOError:
-        # Hm, can't write it.
-        # print("Unable to save the high score.")
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
@@ -186,26 +177,16 @@ def main():
     BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
     BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
     pygame.display.set_caption('Tetromino')
-    # highScore = 0
     
     showTextScreen('Tetromino')
     while True: # game loop
-        # if random.randint(0, 1) == 0:
-        #     pygame.mixer.music.load('tetrisb.mid')
-        # else:
-        #     pygame.mixer.music.load('tetrisc.mid')
-        # pygame.mixer.music.play(-1, 0.0)
+        if random.randint(0, 1) == 0:
+            sound = pygame.mixer.music.load('tetrisb.mid')
+        else:
+            sound = pygame.mixer.music.load('tetrisc.mid')
+        pygame.mixer.music.play(-1, 0.0)
         runGame(getHighScore())
-        # d = shelve.open('score.txt')
-        # highScore = d['score']
-        # pygame.mixer.music.stop()
         showTextScreen('Game Over')
-
-def saveHigh(saveHighScore):
-	highScore = saveHighScore
-
-def getHigh() :
-	return highScore
 
 def runGame(saveHigh):
     # setup variables for the start of the game
@@ -241,9 +222,9 @@ def runGame(saveHigh):
                 if (event.key == K_p):
                     # Pausing the game
                     DISPLAYSURF.fill(BGCOLOR)
-                    # pygame.mixer.music.stop()
+                    pygame.mixer.music.stop()
                     showTextScreen('Paused') # pause until a key press
-                    # pygame.mixer.music.play(-1, 0.0)
+                    pygame.mixer.music.play(-1, 0.0)
                     lastFallTime = time.time()
                     lastMoveDownTime = time.time()
                     lastMoveSidewaysTime = time.time()
@@ -295,7 +276,7 @@ def runGame(saveHigh):
                             break
                     fallingPiece['y'] += i - 1
 
-                elif event.key == K_z:
+                elif event.key == K_x:
                     savePiece = fallingPiece
                     nextPiece['x'] = fallingPiece['x']
                     nextPiece['y'] = fallingPiece['y']
@@ -324,6 +305,7 @@ def runGame(saveHigh):
                 # falling piece has landed, set it on the board
                 addToBoard(board, fallingPiece)
                 score += removeCompleteLines(board)
+
                 if score > highScore :
                     highScore = score
                 level, fallFreq = calculateLevelAndFallFreq(score)
@@ -334,6 +316,7 @@ def runGame(saveHigh):
                 lastFallTime = time.time()
 
         saveHighScore(highScore)
+
         # drawing everything on the screen
         DISPLAYSURF.fill(BGCOLOR)
         drawBoard(board)
@@ -401,14 +384,14 @@ def checkForQuit():
 
 
 def calculateLevelAndFallFreq(score):
-    # Based on the score, return the level the player is on and
-    # how many seconds pass until a falling piece falls one space.
+    # score가 10 올라갈 때마다 1 level up
+    # 블럭이 바닥에 도달하는 속도를 줄인다 (속도를 빠르게 한다)
     level = int(score / 10) + 1
     fallFreq = 0.27 - (level * 0.02)
     return level, fallFreq
 
 def getNewPiece():
-    # return a random new piece in a random rotation and color
+	# random한 새로운 piece를 random한 color와 rotation으로 생성한다
     shape = random.choice(list(PIECES.keys()))
     newPiece = {'shape': shape,
                 'rotation': random.randint(0, len(PIECES[shape]) - 1),
@@ -475,6 +458,8 @@ def removeCompleteLines(board):
             for x in range(BOARDWIDTH):
                 board[x][0] = BLANK
             numLinesRemoved += 1
+            # pygame.mixer.music.load('remove.mp3')
+            # pygame.mixer.music.play()
             # Note on the next iteration of the loop, y is the same.
             # This is so that if the line that was pulled down is also
             # complete, it will be removed.
@@ -566,4 +551,5 @@ def drawNextNextPiece(piece):
     drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=280)
 
 if __name__ == '__main__':
+    # pygame.init()
     main()
