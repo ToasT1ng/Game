@@ -190,12 +190,14 @@ def runGame():
 
     fallingPiece = getNewPiece()
     nextPiece = getNewPiece()
+    nextNextPiece = getNewPiece()
 
     while True: # game loop
         if fallingPiece == None:
             # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
-            nextPiece = getNewPiece()
+            nextPiece = nextNextPiece
+            nextNextPiece = getNewPiece()
             lastFallTime = time.time() # reset lastFallTime
 
             if not isValidPosition(board, fallingPiece):
@@ -207,9 +209,9 @@ def runGame():
                 if (event.key == K_p):
                     # Pausing the game
                     DISPLAYSURF.fill(BGCOLOR)
-                    pygame.mixer.music.stop()
+                    # pygame.mixer.music.stop()
                     showTextScreen('Paused') # pause until a key press
-                    pygame.mixer.music.play(-1, 0.0)
+                    # pygame.mixer.music.play(-1, 0.0)
                     lastFallTime = time.time()
                     lastMoveDownTime = time.time()
                     lastMoveSidewaysTime = time.time()
@@ -261,6 +263,16 @@ def runGame():
                             break
                     fallingPiece['y'] += i - 1
 
+                elif event.key == K_z:
+                    savePiece = fallingPiece
+                    nextPiece['x'] = fallingPiece['x']
+                    nextPiece['y'] = fallingPiece['y']
+                    fallingPiece = nextPiece
+                    savePiece['x'] = int(BOARDWIDTH / 2) - int( TEMPLATEWIDTH / 2)
+                    savePiece['y'] = -2
+                    nextPiece = savePiece;
+
+
         # handle moving the piece because of user input
         if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > MOVESIDEWAYSFREQ:
             if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
@@ -292,6 +304,7 @@ def runGame():
         drawBoard(board)
         drawStatus(score, level)
         drawNextPiece(nextPiece)
+        drawNextNextPiece(nextNextPiece)
         if fallingPiece != None:
             drawPiece(fallingPiece)
 
@@ -404,6 +417,8 @@ def isValidPosition(board, piece, adjX=0, adjY=0):
                 return False
     return True
 
+
+# 한 줄이 빈칸 없이 채워졌는지 boolean 값으로 return 해주는 함수
 def isCompleteLine(board, y):
     # Return True if the line filled with boxes with no gaps.
     for x in range(BOARDWIDTH):
@@ -500,6 +515,15 @@ def drawNextPiece(piece):
     DISPLAYSURF.blit(nextSurf, nextRect)
     # draw the "next" piece
     drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=100)
+
+def drawNextNextPiece(piece):
+    # draw the "next" text
+    nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
+    nextRect = nextSurf.get_rect()
+    nextRect.topleft = (WINDOWWIDTH - 120, 200)
+    DISPLAYSURF.blit(nextSurf, nextRect)
+    # draw the "next" piece
+    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=220)
 
 
 if __name__ == '__main__':
