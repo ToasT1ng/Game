@@ -5,6 +5,8 @@
 
 import random, time, pygame, sys
 from pygame.locals import *
+import shelve
+
 
 FPS = 25
 WINDOWWIDTH = 640
@@ -154,6 +156,27 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
+def getHighScore():
+    # Default high score
+    highScore = 0
+    # Try to read the high score from a file
+    # try:
+    highScoreFile = open("score.txt", "r")
+    highScore = int(highScoreFile.read())
+    highScoreFile.close()
+    # except IOError:
+
+    return highScore
+
+def saveHighScore(newHighScore):
+    # try:
+        # Write the file to disk
+    highScoreFile = open("score.txt", "w")
+    highScoreFile.write(str(newHighScore))
+    highScoreFile.close()
+    # except IOError:
+        # Hm, can't write it.
+        # print("Unable to save the high score.")
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
@@ -163,7 +186,8 @@ def main():
     BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
     BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
     pygame.display.set_caption('Tetromino')
-
+    # highScore = 0
+    
     showTextScreen('Tetromino')
     while True: # game loop
         # if random.randint(0, 1) == 0:
@@ -171,12 +195,19 @@ def main():
         # else:
         #     pygame.mixer.music.load('tetrisc.mid')
         # pygame.mixer.music.play(-1, 0.0)
-        runGame()
+        runGame(getHighScore())
+        # d = shelve.open('score.txt')
+        # highScore = d['score']
         # pygame.mixer.music.stop()
         showTextScreen('Game Over')
 
+def saveHigh(saveHighScore):
+	highScore = saveHighScore
 
-def runGame():
+def getHigh() :
+	return highScore
+
+def runGame(saveHigh):
     # setup variables for the start of the game
     board = getBlankBoard()
     lastMoveDownTime = time.time()
@@ -186,6 +217,7 @@ def runGame():
     movingLeft = False
     movingRight = False
     score = 0
+    highScore = saveHigh
     level, fallFreq = calculateLevelAndFallFreq(score)
 
     fallingPiece = getNewPiece()
@@ -292,6 +324,8 @@ def runGame():
                 # falling piece has landed, set it on the board
                 addToBoard(board, fallingPiece)
                 score += removeCompleteLines(board)
+                if score > highScore :
+                    highScore = score
                 level, fallFreq = calculateLevelAndFallFreq(score)
                 fallingPiece = None
             else:
@@ -299,10 +333,11 @@ def runGame():
                 fallingPiece['y'] += 1
                 lastFallTime = time.time()
 
+        saveHighScore(highScore)
         # drawing everything on the screen
         DISPLAYSURF.fill(BGCOLOR)
         drawBoard(board)
-        drawStatus(score, level)
+        drawStatus(score, level, highScore)
         drawNextPiece(nextPiece)
         drawNextNextPiece(nextNextPiece)
         if fallingPiece != None:
@@ -310,7 +345,6 @@ def runGame():
 
         pygame.display.update()
         FPSCLOCK.tick(FPS)
-
 
 def makeTextObjs(text, font, color):
     surf = font.render(text, True, color)
@@ -480,17 +514,23 @@ def drawBoard(board):
             drawBox(x, y, board[x][y])
 
 
-def drawStatus(score, level):
+def drawStatus(score, level, highScore):
+	# draw the highScore text
+    scoreSurf = BASICFONT.render('High Score: %s' % highScore, True, TEXTCOLOR)
+    scoreRect = scoreSurf.get_rect()
+    scoreRect.topleft = (WINDOWWIDTH - 150, 20)
+    DISPLAYSURF.blit(scoreSurf, scoreRect)
+
     # draw the score text
     scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
     scoreRect = scoreSurf.get_rect()
-    scoreRect.topleft = (WINDOWWIDTH - 150, 20)
+    scoreRect.topleft = (WINDOWWIDTH - 150, 50)
     DISPLAYSURF.blit(scoreSurf, scoreRect)
 
     # draw the level text
     levelSurf = BASICFONT.render('Level: %s' % level, True, TEXTCOLOR)
     levelRect = levelSurf.get_rect()
-    levelRect.topleft = (WINDOWWIDTH - 150, 50)
+    levelRect.topleft = (WINDOWWIDTH - 150, 80)
     DISPLAYSURF.blit(levelSurf, levelRect)
 
 
@@ -511,20 +551,19 @@ def drawNextPiece(piece):
     # draw the "next" text
     nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
     nextRect = nextSurf.get_rect()
-    nextRect.topleft = (WINDOWWIDTH - 120, 80)
+    nextRect.topleft = (WINDOWWIDTH - 120, 150)
     DISPLAYSURF.blit(nextSurf, nextRect)
     # draw the "next" piece
-    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=100)
+    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=160)
 
 def drawNextNextPiece(piece):
-    # draw the "next" text
+    # draw the "nextNext" text
     nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
     nextRect = nextSurf.get_rect()
-    nextRect.topleft = (WINDOWWIDTH - 120, 200)
+    nextRect.topleft = (WINDOWWIDTH - 120, 270)
     DISPLAYSURF.blit(nextSurf, nextRect)
-    # draw the "next" piece
-    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=220)
-
+    # draw the "nextNext" piece
+    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=280)
 
 if __name__ == '__main__':
     main()
