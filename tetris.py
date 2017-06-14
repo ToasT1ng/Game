@@ -170,12 +170,15 @@ def saveHighScore(newHighScore):
     highScoreFile.close()
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
+    global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, MYFONT, MYFONT2, OPTIONFONT
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
     BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
     BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
+    MYFONT = pygame.font.Font('freesansbold.ttf', 40)
+    MYFONT2 = pygame.font.Font('freesansbold.ttf', 75)
+    OPTIONFONT = pygame.font.Font('freesansbold.ttf', 30)
     pygame.display.set_caption('Tetris')
     
     showTextScreen('Tetris')
@@ -185,7 +188,13 @@ def main():
         else:
             sound = pygame.mixer.music.load('tetrisc.mid')
         pygame.mixer.music.play(-1, 0.0)
-        runGame(getHighScore())
+        initialHigh = getHighScore()
+        runGame(initialHigh)
+        highSave = getHighScore()
+        if initialHigh != highSave :
+            highSaveFile = open("high.txt",'a')
+            highSaveFile.write(str(highSave)+"\n")
+            highSaveFile.close()
         showTextScreen('Game Over')
 
 def runGame(saveHigh):
@@ -224,6 +233,24 @@ def runGame(saveHigh):
                     DISPLAYSURF.fill(BGCOLOR)
                     pygame.mixer.music.stop()
                     showTextScreen('Paused') # pause until a key press
+                    pygame.mixer.music.play(-1, 0.0)
+                    lastFallTime = time.time()
+                    lastMoveDownTime = time.time()
+                    lastMoveSidewaysTime = time.time()
+                elif (event.key == K_h):
+                    # show high scores
+                    DISPLAYSURF.fill(BGCOLOR)
+                    pygame.mixer.music.stop()
+                    showHigh() # pause until a key press
+                    pygame.mixer.music.play(-1, 0.0)
+                    lastFallTime = time.time()
+                    lastMoveDownTime = time.time()
+                    lastMoveSidewaysTime = time.time()
+                elif (event.key == K_o):
+                    # show options
+                    DISPLAYSURF.fill(BGCOLOR)
+                    pygame.mixer.music.stop()
+                    showHelp() # pause until a key press
                     pygame.mixer.music.play(-1, 0.0)
                     lastFallTime = time.time()
                     lastMoveDownTime = time.time()
@@ -310,6 +337,7 @@ def runGame(saveHigh):
                     highScore = score
                 level, fallFreq = calculateLevelAndFallFreq(score)
                 fallingPiece = None
+
             else:
                 # piece did not land, just move the piece down
                 fallingPiece['y'] += 1
@@ -350,6 +378,98 @@ def checkForKeyPress():
         return event.key
     return None
 
+
+def showHigh():
+    titleSurf, titleRect = makeTextObjs('High Scores', MYFONT2, TEXTSHADOWCOLOR)
+    titleRect.center = int(WINDOWWIDTH / 2),100 
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    titleSurf, titleRect = makeTextObjs('High Scores', MYFONT2, TEXTCOLOR)
+    titleRect.center = (int(WINDOWWIDTH / 2) - 1.5, 97)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    topList = [0,0,0]
+    num = 0
+    high = open("high.txt", 'r')
+    while True:
+        line = high.readline()
+        if not line: break
+        if num > 2 :
+            topList.append(0)
+        topList[num] = int(line)
+        num += 1
+    high.close()
+    length = len(topList)
+
+    first = topList[length-1]
+    second = topList[length-2]
+    third = topList[length-3]
+
+    if third != 0 and first == 0 and second == 0:
+        first = third
+        third = 0
+    if third != 0 and first == 0 and second != 0:
+        first = second
+        second = third
+        third = 0
+
+
+    firstSurf, firstRect = makeTextObjs('1 :    ' + str(first), MYFONT, TEXTCOLOR)
+    firstRect.center = (int(WINDOWWIDTH / 2), 220)
+    DISPLAYSURF.blit(firstSurf, firstRect)
+
+    secondSurf, secondRect = makeTextObjs('2 :    ' + str(second), MYFONT, TEXTCOLOR)
+    secondRect.center = (int(WINDOWWIDTH / 2), 280)
+    DISPLAYSURF.blit(secondSurf, secondRect)
+  
+    thirdSurf, thirdRect = makeTextObjs('3 :    ' + str(third), MYFONT, TEXTCOLOR)
+    thirdRect.center = (int(WINDOWWIDTH / 2), 340)
+    DISPLAYSURF.blit(thirdSurf, thirdRect)
+
+    pressKeySurf, pressKeyRect = makeTextObjs('Press a key to play.', BASICFONT, TEXTCOLOR)
+    pressKeyRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + 200)
+    DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
+
+    while checkForKeyPress() == None:
+        pygame.display.update()
+        FPSCLOCK.tick()
+
+
+def showHelp():
+    titleSurf, titleRect = makeTextObjs('Help', MYFONT2, TEXTSHADOWCOLOR)
+    titleRect.center = int(WINDOWWIDTH / 2),100 
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    titleSurf, titleRect = makeTextObjs('Help', MYFONT2, TEXTCOLOR)
+    titleRect.center = (int(WINDOWWIDTH / 2) - 1.5, 97)
+    DISPLAYSURF.blit(titleSurf, titleRect)
+
+    # KEYS
+    pauseSurf, pauseRect = makeTextObjs('P : Pause', OPTIONFONT, TEXTCOLOR)
+    pauseRect.center = (int(WINDOWWIDTH / 2), 220)
+    DISPLAYSURF.blit(pauseSurf, pauseRect)
+
+    switchSurf, switchRect = makeTextObjs('X : Switch Block', OPTIONFONT, TEXTCOLOR)
+    switchRect.center = (int(WINDOWWIDTH / 2), 260)
+    DISPLAYSURF.blit(switchSurf, switchRect)
+  
+    highScoresSurf, highScoresRect = makeTextObjs('H : HighScores', OPTIONFONT, TEXTCOLOR)
+    highScoresRect.center = (int(WINDOWWIDTH / 2), 300)
+    DISPLAYSURF.blit(highScoresSurf, highScoresRect)
+
+    exitSurf, exitRect = makeTextObjs('ESC : Exit Game', OPTIONFONT, TEXTCOLOR)
+    exitRect.center = (int(WINDOWWIDTH / 2), 340)
+    DISPLAYSURF.blit(exitSurf, exitRect)
+
+
+    # Draw the additional "Press a key to play." text.
+    pressKeySurf, pressKeyRect = makeTextObjs('Press a key to play.', BASICFONT, TEXTCOLOR)
+    pressKeyRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + 200)
+    DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
+
+    while checkForKeyPress() == None:
+        pygame.display.update()
+        FPSCLOCK.tick()
 
 def showTextScreen(text):
     # This function displays large text in the
