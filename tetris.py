@@ -3,6 +3,8 @@
 # http://inventwithpython.com/pygame
 # Released under a "Simplified BSD" license
 
+# By Jina Sung https://github.com/ToasT1ng
+
 import random, time, pygame, sys
 from pygame.locals import *
 import shelve
