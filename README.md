@@ -28,3 +28,6 @@
 
 ## 시연 이미지
 ![image](./img/tetris.gif)
+
+## 참고 링크
+이 프로젝트는 [Tetromino](http://inventwithpython.com/pygame/downloads/) 를 기반으로 진행되었다.
